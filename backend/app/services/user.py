@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas import schemas
+from app.schemas import user
 from app.models import models
 from app.security import utils
 
@@ -9,7 +9,7 @@ class UserService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    def create_user(self, user: schemas.UserCreate):
+    def create_user(self, user: user.UserCreate):
         hashed_password = utils.hash(user.password)
         user.password = hashed_password
         new_user = models.User(**user.model_dump())

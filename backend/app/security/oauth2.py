@@ -3,9 +3,8 @@ from this import d
 from fastapi import Depends, HTTPException, status
 from fastapi.security.oauth2 import OAuth2PasswordBearer
 import jwt
-from pwdlib import PasswordHash
 from datetime import datetime, timedelta
-from app.schemas import schemas
+from app.schemas import user
 from app.config import settings
 
 outh2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -20,16 +19,18 @@ def create_access_token(data: dict):
     expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return {"token": encoded_jwt}
+    return encoded_jwt
 
 
 def verify_access_token(token: str, credentials_exception):
     try:
         payload = jwt.decode(token, SECRET_KEY, ALGORITHM)
-        id: str = payload.get("users_id")
+        print(payload)
+        id: str = payload.get("user_id")
+        role: str = payload.get("user_role")
         if not id:
             raise credentials_exception
-        token_data = schemas.TokenData(id=id)
+        token_data = user.TokenData(id=id, role=role)
     except:
         raise credentials_exception
     return token_data

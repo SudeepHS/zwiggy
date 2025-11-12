@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Optional
+import uuid
 from pydantic import BaseModel, EmailStr
 
 
@@ -14,6 +15,12 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     role: UserRole
+
+
+class UserResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    email: EmailStr
 
 
 class UserLogin(BaseModel):

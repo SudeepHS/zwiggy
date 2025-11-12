@@ -2,14 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db import get_db
 from app.models import models
-from app.schemas.schemas import UserCreate
+from app.schemas import user
 from app.services.user import UserService
+from app.security.oauth2 import get_current_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.post("/")
-def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+@router.post("/", response_model=user.UserResponse)
+def create_user(user: user.UserCreate, db: AsyncSession = Depends(get_db)):
     user_service = UserService(db)
     try:
         new_user = user_service.create_user(user)
@@ -19,7 +20,7 @@ def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/")
-def get_all_users(db: AsyncSession = Depends(get_db)):
+def get_all_users(db: AsyncSession = Depends(get_db), user=Depends(get_current_user)):
     user_service = UserService(db)
     users = user_service.get_all_users()
     if not users:

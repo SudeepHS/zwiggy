@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import user
-from app.security import auth
+from app.routes import auth
 
 app = FastAPI()
 app.include_router(auth.router)
@@ -17,6 +17,6 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+@app.get("/health")
 def read_root():
-    return {"message": "Hello, World!"}
+    return {"message": "App is healthy"}
