@@ -1,17 +1,62 @@
+from typing import Dict
+from uuid import UUID
+from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.restaurant import RestaurantCreate
+from app.schemas.restaurant import RestaurantCreate, RestaurantUpdate
 from app.models import models
-from app.security import utils
 
 
 class RestaurantService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+
+    async def get_restaurant_by_id(self, id: UUID):
+        stmt = select(models.Restaurant).where(models.Restaurant.id == id)
+        restaurant = (await self.session.execute(stmt)).scalar_one_or_none()
+        if not restaurant:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found"
+            )
+        return restaurant
+
+    async def get_all_restaurants(self):
+        restaurants = (
+            (await self.session.execute(select(models.Restaurant))).scalars().all()
+        )
+        return restaurants
 
     async def create_restaurant(self, restaurant: RestaurantCreate):
         new_restaurant = models.Restaurant(**restaurant.model_dump())
-        self.db.add(new_restaurant)
-        await self.db.commit()
-        await self.db.refresh(new_restaurant)
+        self.session.add(new_restaurant)
+        await self.session.commit()
+        await self.session.refresh(new_restaurant)
         return new_restaurant
+
+    async def update_restaurant(self, id: UUID, restaurant: RestaurantUpdate):
+        print("restaurant")
+        stmt = select(models.Restaurant).where(models.Restaurant.id == id)
+        restaurant_obj = (await self.session.execute(stmt)).scalar_one_or_none()
+        if not restaurant_obj:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found"
+            )
+        print("restaurant")
+        update_data: Dict = restaurant.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(restaurant_obj, key, value)
+        await self.session.commit()
+        await self.session.refresh(restaurant_obj)
+        return restaurant_obj
+
+    async def delete_restaurant(self, id: UUID):
+        stmt = select(models.Restaurant).where(models.Restaurant.id == id)
+        restaurant = (await self.session.execute(stmt)).scalar_one_or_none()
+        if not restaurant:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found"
+            )
+        await self.session.delete(restaurant)
+        await self.session.commit()
+        return {"message": f"Restaurant {id} deleted successfully"}
