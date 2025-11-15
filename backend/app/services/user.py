@@ -14,10 +14,9 @@ class UserService:
         user.password = hashed_password
         new_user = models.User(**user.model_dump())
         self.db.add(new_user)
-        print(new_user.role)
         self.db.commit()
         self.db.refresh(new_user)
         return new_user
 
     def get_all_users(self):
-        return self.db.query(models.User).all()
+        return self.db.execute(models.User).all()

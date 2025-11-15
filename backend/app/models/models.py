@@ -1,7 +1,17 @@
 import enum
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import TIMESTAMP, Column, Integer, String, text, Enum
+from sqlalchemy.sql import func
+from sqlalchemy import (
+    TIMESTAMP,
+    Boolean,
+    Column,
+    ForeignKey,
+    String,
+    text,
+    Enum,
+    Float,
+)
 from app.db import Base
 
 
@@ -22,4 +32,59 @@ class User(Base):
     role = Column(Enum(UserRole), nullable=False)
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+        onupdate=func.now(),
+    )
+
+
+class Restaurant(Base):
+    __tablename__ = "restaurants"
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4
+    )
+    name = Column(String, nullable=False)
+    address = Column(String, nullable=False)
+    cuisine = Column(String)
+    rating = Column(Float, default=0)
+    created_by = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=False,
+    )
+    created_at = Column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+        onupdate=func.now(),
+    )
+
+
+class Menus(Base):
+    __tablename__ = "menus"
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4
+    )
+    item_name = Column(String, nullable=False)
+    price = Column(Float, nullable=False)
+    is_available = Column(Boolean, default=True)
+    restaurant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("restaurants.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    created_at = Column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+        onupdate=func.now(),
     )
