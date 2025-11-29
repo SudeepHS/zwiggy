@@ -27,7 +27,14 @@ async def create_restaurant(
             detail="Please user restaurant account to create restaurnt",
         )
 
-    return await restaurant_service.create_restaurant(restaurant)
+    new_restaurant = await restaurant_service.create_restaurant(restaurant)
+    await restaurant_service.add_restaurant_admin(
+        restaurant.RestaurantAdminAdd(
+            restaurant_id=new_restaurant.id,
+            user_id=logged_in_user.id,
+        )
+    )
+    return new_restaurant
 
 
 @router.get("/{id}")
