@@ -66,6 +66,35 @@ class Restaurant(Base):
     )
 
 
+class RestaurantAdmin(Base):
+    __tablename__ = "restaurant_admins"
+
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    restaurant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("restaurants.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
 class Menus(Base):
     __tablename__ = "menus"
     id = Column(

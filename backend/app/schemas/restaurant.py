@@ -1,4 +1,5 @@
 from typing import Optional
+import uuid
 from pydantic import BaseModel
 
 
@@ -16,3 +17,8 @@ class RestaurantUpdate(Restaurant):
     name: Optional[str] = None
     address: Optional[str] = None
     cuisine: Optional[str] = None
+
+
+class RestaurantAdminAdd(BaseModel):
+    restaurant_id: str
+    user_id: str

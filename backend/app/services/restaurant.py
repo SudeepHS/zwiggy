@@ -4,7 +4,11 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.restaurant import RestaurantCreate, RestaurantUpdate
+from app.schemas.restaurant import (
+    RestaurantCreate,
+    RestaurantUpdate,
+    RestaurantAdminAdd,
+)
 from app.models import models
 
 
@@ -35,14 +39,12 @@ class RestaurantService:
         return new_restaurant
 
     async def update_restaurant(self, id: UUID, restaurant: RestaurantUpdate):
-        print("restaurant")
         stmt = select(models.Restaurant).where(models.Restaurant.id == id)
         restaurant_obj = (await self.session.execute(stmt)).scalar_one_or_none()
         if not restaurant_obj:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found"
             )
-        print("restaurant")
         update_data: Dict = restaurant.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(restaurant_obj, key, value)
@@ -60,3 +62,12 @@ class RestaurantService:
         await self.session.delete(restaurant)
         await self.session.commit()
         return {"message": f"Restaurant {id} deleted successfully"}
+
+    async def add_restaurant_admin(self, admin_data: RestaurantAdminAdd):
+        new_admin = models.RestaurantAdmin(
+            user_id=admin_data.user_id, restaurant_id=admin_data.restaurant_id
+        )
+        self.session.add(new_admin)
+        await self.session.commit()
+        await self.session.refresh(new_admin)
+        return {"msg": "Admin added successfully"}
