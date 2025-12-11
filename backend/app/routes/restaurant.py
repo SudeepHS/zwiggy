@@ -8,6 +8,7 @@ from app.security.oauth2 import get_current_user
 from app.models.models import RestaurantAdmin, User
 from app.schemas import restaurant
 from app.services.restaurant import RestaurantService
+from app.services.dependencies import get_restaurant_service
 
 router = APIRouter(prefix="/restaurants", tags=["restaurants"])
 
@@ -17,8 +18,8 @@ async def create_restaurant(
     restaurant: restaurant.RestaurantCreate,
     session: AsyncSession = Depends(get_db),
     logged_in_user=Depends(get_current_user),
+    restaurant_service: RestaurantService = Depends(get_restaurant_service),
 ):
-    restaurant_service = RestaurantService(session)
     stmt = select(User).where(User.id == logged_in_user.id)
     user = (await session.execute(stmt)).scalar_one_or_none()
     if user.role != "restaurant":
@@ -38,14 +39,17 @@ async def create_restaurant(
 
 
 @router.get("/{id}")
-async def get_restaurant_by_id(id: UUID, session: AsyncSession = Depends(get_db)):
-    restaurant_service = RestaurantService(session)
+async def get_restaurant_by_id(
+    id: UUID,
+    restaurant_service: RestaurantService = Depends(get_restaurant_service),
+):
     return await restaurant_service.get_restaurant_by_id(id)
 
 
 @router.get("/")
-async def get_all_restaurants(session: AsyncSession = Depends(get_db)):
-    restaurant_service = RestaurantService(session)
+async def get_all_restaurants(
+    restaurant_service: RestaurantService = Depends(get_restaurant_service),
+):
     return await restaurant_service.get_all_restaurants()
 
 
@@ -53,20 +57,18 @@ async def get_all_restaurants(session: AsyncSession = Depends(get_db)):
 async def update_restaurant(
     id: UUID,
     restaurant: restaurant.RestaurantUpdate,
-    session: AsyncSession = Depends(get_db),
     logged_in_user=Depends(get_current_user),
+    restaurant_service: RestaurantService = Depends(get_restaurant_service),
 ):
-    restaurant_service = RestaurantService(session)
     return await restaurant_service.update_restaurant(id, restaurant)
 
 
 @router.delete("/{id}")
 async def delete_restaurant(
     id: UUID,
-    session: AsyncSession = Depends(get_db),
     logged_in_user=Depends(get_current_user),
+    restaurant_service: RestaurantService = Depends(get_restaurant_service),
 ):
-    restaurant_service = RestaurantService(session)
     return await restaurant_service.delete_restaurant(id)
 
 
@@ -75,6 +77,7 @@ async def add_restaurant_admin(
     admin_data: restaurant.RestaurantAdminAdd,
     session: AsyncSession = Depends(get_db),
     logged_in_user=Depends(get_current_user),
+    restaurant_service: RestaurantService = Depends(get_restaurant_service),
 ):
     stmt = select(RestaurantAdmin.user_id).where(
         RestaurantAdmin.restaurant_id == admin_data.restaurant_id
@@ -85,5 +88,4 @@ async def add_restaurant_admin(
             status_code=HTTP_401_UNAUTHORIZED,
             detail="You are not authorized to do this",
         )
-    restaurant_service = RestaurantService(session)
     return await restaurant_service.add_restaurant_admin(admin_data)
