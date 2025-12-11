@@ -1,17 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.db import get_db
-from app.models import models
+
 from app.schemas import user
 from app.services.user import UserService
 from app.security.oauth2 import get_current_user
+from app.services.dependencies import get_user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.post("/", response_model=user.UserResponse)
-async def create_user(user: user.UserCreate, session: AsyncSession = Depends(get_db)):
-    user_service = UserService(session)
+async def create_user(
+    user: user.UserCreate,
+    user_service: UserService = Depends(get_user_service),
+    logged_in_user=Depends(get_current_user),
+):
     try:
         new_user = await user_service.create_user(user)
     except Exception as e:
@@ -21,9 +23,9 @@ async def create_user(user: user.UserCreate, session: AsyncSession = Depends(get
 
 @router.get("/")
 async def get_all_users(
-    session: AsyncSession = Depends(get_db), user=Depends(get_current_user)
+    user_service: UserService = Depends(get_user_service),
+    logged_in_user=Depends(get_current_user),
 ):
-    user_service = UserService(session)
     users = await user_service.get_all_users()
     if not users:
         raise HTTPException(status=status.HTTP_404_NOT_FOUND, detail="Users not found")
