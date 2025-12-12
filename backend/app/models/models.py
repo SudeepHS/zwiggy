@@ -8,6 +8,8 @@ from sqlalchemy import (
     Column,
     ForeignKey,
     String,
+    UniqueConstraint,
+    null,
     text,
     Enum,
     Float,
@@ -95,7 +97,7 @@ class RestaurantAdmin(Base):
     )
 
 
-class Menus(Base):
+class Menu(Base):
     __tablename__ = "menus"
     id = Column(
         UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4
@@ -116,4 +118,32 @@ class Menus(Base):
         nullable=False,
         server_default=text("now()"),
         onupdate=func.now(),
+    )
+
+
+class Cart(Base):
+    __tablename__ = "carts"
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4
+    )
+    user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    restaurant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("restaurants.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    total_amount = Column(Float, nullable=False, default=0)
+    created_at = Column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+        onupdate=func.now(),
+    )
+    __table_args__ = (
+        UniqueConstraint("user_id", "restaurant_id", name="uq_user_restaurant_cart"),
     )
