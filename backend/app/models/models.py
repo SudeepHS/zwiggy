@@ -9,10 +9,10 @@ from sqlalchemy import (
     ForeignKey,
     String,
     UniqueConstraint,
-    null,
     text,
     Enum,
     Float,
+    Integer,
 )
 from app.db import Base
 
@@ -147,3 +147,27 @@ class Cart(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "restaurant_id", name="uq_user_restaurant_cart"),
     )
+
+
+class CartItem(Base):
+    __tablename__ = "cart_items"
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4
+    )
+    cart_id = Column(
+        UUID(as_uuid=True), ForeignKey("carts.id", ondelete="CASCADE"), nullable=False
+    )
+    menu_id = Column(
+        UUID(as_uuid=True), ForeignKey("menus.id", ondelete="CASCADE"), nullable=False
+    )
+    quantity = Column(Integer, nullable=False)
+    created_at = Column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+        onupdate=func.now(),
+    )
+    __table_args__ = (UniqueConstraint("cart_id", "menu_id", name="uq_cart_menu_item"),)
