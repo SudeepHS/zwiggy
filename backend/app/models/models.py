@@ -129,11 +129,7 @@ class Cart(Base):
     user_id = Column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    restaurant_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("restaurants.id", ondelete="CASCADE"),
-        nullable=False,
-    )
+
     total_amount = Column(Float, nullable=False, default=0)
     created_at = Column(
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
@@ -143,9 +139,6 @@ class Cart(Base):
         nullable=False,
         server_default=text("now()"),
         onupdate=func.now(),
-    )
-    __table_args__ = (
-        UniqueConstraint("user_id", "restaurant_id", name="uq_user_restaurant_cart"),
     )
 
 
